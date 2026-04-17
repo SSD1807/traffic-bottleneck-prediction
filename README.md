@@ -63,7 +63,7 @@ Traffic conditions dynamically influence route selection using ML predictions an
 
 ##  Author
 
-SHREEYAN SATWIK DAS
-SAMBIT KUMAR SAHOO
-SANAT KUMAR
+SHREEYAN SATWIK DAS,
+SAMBIT KUMAR SAHOO,
+SANAT KUMAR,
 SAKTI SOURAV DAS
