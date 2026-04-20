@@ -102,7 +102,7 @@ To design a scalable system that:
 
 ---
 
-## 📸 Demo
+<!-- ## 📸 Demo
 
 Add your dashboard screenshot here:
 
@@ -110,7 +110,7 @@ Add your dashboard screenshot here:
 ![Dashboard](screenshot.png)
 ```
 
----
+--- -->
 
 ## 👨‍💻 Authors
 
