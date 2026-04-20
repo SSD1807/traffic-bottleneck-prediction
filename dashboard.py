@@ -111,7 +111,7 @@ def load_model():
 
 @st.cache_data
 def load_df():
-    return pd.read_csv("clean_traffic.csv")
+    return pd.read_csv("dataset/merged_traffic.csv")
 
 @st.cache_resource
 def get_graph():
@@ -244,6 +244,8 @@ node_states = simulate_node_states(
     hour, day, temp_c, rain, clouds, weather_code,
     accident_mgr=acc_mgr, seed=42,
 )
+bottlenecks = [n for n, s in node_states.items() if s["label"] == 2]
+
 edge_states = compute_edge_states(G, node_states, acc_mgr)
 
 routes = []
@@ -385,6 +387,23 @@ with tab_anim:
 
 # ── TAB 2: Route Analysis ─────────────────────────────────────────────────────
 with tab_route:
+    #  STEP 1 FIX — Show bottlenecks ONLY for selected routes
+    route_nodes = set()
+    for r in routes:
+        route_nodes.update(r["path"])
+
+    route_bottlenecks = [
+        n for n in route_nodes
+        if node_states.get(n, {}).get("label") == 2
+    ]
+
+    st.subheader("🚨 Bottlenecks on Route")
+
+    if route_bottlenecks:
+        for b in route_bottlenecks:
+            st.warning(f"⚠️ {b}")
+    else:
+        st.success("No bottlenecks on selected route")
     st.subheader("🗺 Route Analysis: " + src_nd + " → " + dst_nd)
 
     if not use_rt:
@@ -606,7 +625,7 @@ with tab_eda:
         st.markdown("**Volume distribution**")
         fig3, ax3 = plt.subplots(figsize=(6, 3.5))
         ax3.set_facecolor("#0e1a2b"); fig3.patch.set_facecolor("#0e1a2b")
-        ax3.hist(df_clean["traffic_volume"], bins=50, color="#6366f1",
+        ax3.hist(df_clean["vehicle_count"], bins=50, color="#6366f1",
                  edgecolor="#0e1a2b", alpha=0.85)
         ax3.set_xlabel("Traffic volume", color="#94a3b8")
         ax3.set_ylabel("Count", color="#94a3b8")

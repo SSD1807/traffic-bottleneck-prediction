@@ -44,6 +44,9 @@ CHANGE 7 — CONGESTION_PENALTY dict updated; all dependent code uses it.
 import networkx as nx
 import pandas as pd
 import random
+import joblib
+
+location_encoder = joblib.load("models/location_encoder.pkl")
 
 # ── Canvas ────────────────────────────────────────────────────────────────────
 CANVAS_W = 1100
@@ -137,11 +140,11 @@ NODE_RADIUS       = {"highway": 22, "main_road": 18, "side_road": 14}
 ROUTE_COLORS      = ["#16a34a", "#3b82f6", "#a855f7"]
 
 # CHANGE 4: stronger penalties so routes visibly change
-CONGESTION_PENALTY = {0: 1.0, 1: 8.0, 2: 30.0}
+CONGESTION_PENALTY = {0: 1.0, 1: 4.0, 2: 12.0}
 ACCIDENT_PENALTY_MUL = 500.0
 
 # CHANGE 3: higher threshold → only truly saturated nodes forced High
-FORCE_HIGH_LOAD  = 0.92
+FORCE_HIGH_LOAD  = 0.97
 FORCE_HIGH_SPEED = 18.0
 
 # CHANGE 6: larger cap → accident routes show ~120 min per seg (clearly worse)
@@ -290,13 +293,22 @@ def simulate_node_states(
 
         # ML prediction
         row = {
-            "hour":           hour,     "day":          day,
-            "month":          6,        "is_weekend":   is_we,
-            "is_rush_hour":   is_rush,  "is_night":     is_night,
-            "temp_celsius":   temp_c,   "rain_1h":      rain,
-            "snow_1h":        0,        "clouds_all":   clouds,
-            "weather_code":   weather_code,
-            "traffic_volume": vol,
+            "hour": hour,
+            "day": day,
+            "month": 6,
+            "is_weekend": is_we,
+            "is_rush_hour": is_rush,
+            "is_night": is_night,
+
+            # NEW MODEL FEATURES
+            "vehicle_count": vol,
+            "avg_speed": speed,
+            "rainfall": rain,
+            "clouds": clouds,
+            "temperature": temp_c,
+
+            # VERY IMPORTANT
+            "location_enc": location_encoder.transform([node])[0]   # will update next
         }
         try:
             X     = pd.DataFrame([row]).reindex(columns=features, fill_value=0)
@@ -307,7 +319,7 @@ def simulate_node_states(
             proba = [1.0, 0.0, 0.0]
 
         # CHANGE 3: Force-High only at truly saturated levels
-        if load >= FORCE_HIGH_LOAD or speed <= FORCE_HIGH_SPEED:
+        if load >= FORCE_HIGH_LOAD and speed <= FORCE_HIGH_SPEED:
             label = 2
 
         states[node] = {
@@ -340,9 +352,16 @@ def compute_edge_states(G, node_states, accident_mgr=None):
         ns_u = node_states.get(u, {})
         ns_v = node_states.get(v, {})
 
-        label_u    = ns_u.get("label", 0)
-        label_v    = ns_v.get("label", 0)
-        edge_label = max(label_u, label_v)
+        label_u = ns_u.get("label", 0)
+        label_v = ns_v.get("label", 0)
+
+        # 🔥 NEW LOGIC
+        if label_u == 2 and label_v == 2:
+            edge_label = 2
+        elif label_u == 2 or label_v == 2:
+            edge_label = 1
+        else:
+            edge_label = int((label_u + label_v) / 2)
 
         eid     = AccidentManager.edge_id(u, v)
         has_acc = bool(accident_mgr and accident_mgr.has(u, v))
@@ -363,6 +382,8 @@ def compute_edge_states(G, node_states, accident_mgr=None):
         c_pen         = CONGESTION_PENALTY[edge_label]   # CHANGE 4
         a_pen         = ACCIDENT_PENALTY_MUL if has_acc else 1.0
         weighted_time = round(base_t * c_pen * a_pen, 2)
+        if edge_label == 2 and base_t > 8:
+            weighted_time = round(weighted_time * 2, 2)
 
         edge_states[eid] = {
             "id":            eid,
@@ -482,6 +503,21 @@ def find_multi_routes(G, source, target, node_states, edge_states,
 
         if len(routes) >= k:
             break
+
+        # Remove very similar routes (NEW STEP 3)
+        filtered_routes = []
+
+        for r in routes:
+            is_similar = False
+            for fr in filtered_routes:
+                overlap = len(set(r["path"]) & set(fr["path"]))
+                if overlap > len(r["path"]) * 0.7:
+                    is_similar = True
+                    break
+            if not is_similar:
+                filtered_routes.append(r)
+
+        routes = filtered_routes[:k]
 
     routes.sort(key=lambda r: (not r["is_accident_free"], r["weighted_cost"]))
 
