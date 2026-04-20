@@ -1,45 +1,66 @@
-# 🚦 Traffic Bottleneck Prediction System
+# 🚦 Traffic Bottleneck Prediction & Smart Routing System
 
-##  Overview
-
-A machine learning–driven traffic congestion prediction and simulation system.
-
-* Predicts congestion using XGBoost
-* Simulates real-time traffic conditions
-* Dynamically reroutes based on congestion and accidents
-* Interactive Streamlit dashboard with animation
+An intelligent traffic analysis system that predicts congestion using Machine Learning and dynamically recommends optimal routes using graph-based algorithms.
 
 ---
 
-##  Features
+## 🔥 Key Features
 
-* Time-based congestion modeling
-* ML-based congestion prediction
-* Accident simulation
-* Dynamic route optimization
-* Interactive visualization
+* 📊 **ML-Based Traffic Prediction**
+  Predicts congestion levels (Low, Medium, High) using trained models (XGBoost / Random Forest)
+
+* 🧠 **Smart Route Optimization**
+  Uses graph algorithms (Dijkstra) to compute optimal routes
+
+* 🚨 **Bottleneck Detection**
+  Identifies high-congestion nodes and critical traffic zones
+
+* 🔄 **Dynamic Rerouting**
+  Avoids congested roads and suggests alternative paths in real-time
+
+* 📍 **Interactive Dashboard (Streamlit)**
+  Displays:
+
+  * Traffic conditions
+  * Route comparisons
+  * Network visualization
 
 ---
 
-##  Tech Stack
+## 🧠 Tech Stack
 
-* Python
-* XGBoost
-* NetworkX
-* Streamlit
-* Matplotlib
+* **Programming Language:** Python
+* **Machine Learning:** Scikit-learn, XGBoost
+* **Graph Algorithms:** NetworkX
+* **Visualization:** Streamlit, Matplotlib
+* **Data Processing:** Pandas, NumPy
 
 ---
 
-##  Run the Project
-
-### 1. Install dependencies
+## 🚀 How to Run
 
 ```bash
 pip install -r requirements.txt
+streamlit run dashboard.py
 ```
 
-### 2. Run dashboard
+---
+
+## ⚙️ Project Workflow
+
+1. **Data Preprocessing**
+
+```bash
+python phase1_preprocess.py
+```
+
+2. **Model Training**
+
+```bash
+python phase2_train.py
+```
+
+3. **Run Dashboard**
 
 ```bash
 streamlit run dashboard.py
@@ -47,23 +68,64 @@ streamlit run dashboard.py
 
 ---
 
-##  Workflow
+## 🧩 System Architecture
 
-1. Data preprocessing → `phase1_preprocess.py`
-2. Model training → `phase2_train.py`
-3. Simulation + dashboard → `dashboard.py`
-
----
-
-##  Key Idea
-
-Traffic conditions dynamically influence route selection using ML predictions and real-time simulation.
+* Raw Traffic Data → Feature Engineering
+* ML Model → Predict congestion levels
+* Graph Engine → Apply dynamic weights
+* Routing Algorithm → Compute optimal paths
+* Dashboard → Visualize traffic and routes
 
 ---
 
-##  Author
+## 📊 Dataset
 
-SHREEYAN SATWIK DAS,
-SAMBIT KUMAR SAHOO,
-SANAT KUMAR,
-SAKTI SOURAV DAS
+Datasets are not included due to size constraints.
+
+To regenerate datasets:
+
+```bash
+python generate_bhubaneswar_traffic.py
+python merge_and_retrain.py
+```
+
+---
+
+## 🎯 Project Objective
+
+To design a scalable system that:
+
+* Predicts urban traffic congestion
+* Detects bottleneck regions
+* Suggests optimal routes dynamically
+* Simulates real-world traffic conditions
+
+---
+
+## 📸 Demo
+
+Add your dashboard screenshot here:
+
+```markdown
+![Dashboard](screenshot.png)
+```
+
+---
+
+## 👨‍💻 Authors
+
+* Shreeyan Satwik Das
+* Sambit Kumar Sahoo
+* Sanat Kumar
+* Sakti Sourav Das
+
+---
+
+## 🚀 Future Enhancements
+
+* Integration with real-time traffic APIs (Google Maps / OpenTraffic)
+* Implementation of A* algorithm for faster routing
+* Live GPS-based traffic input
+* Deployment as a full web application
+
+---
